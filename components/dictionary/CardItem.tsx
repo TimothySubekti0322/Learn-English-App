@@ -1,6 +1,6 @@
-import { View, Text, TouchableOpacity, Alert } from "react-native";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Card } from "@/lib/types";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 
 interface CardItemProps {
   card: Card;
@@ -8,15 +8,7 @@ interface CardItemProps {
   onDelete: (id: string) => void;
 }
 
-function renderExampleWithBoldTerm(example: string, term: string) {
-  if (!example || !term) {
-    return (
-      <Text className="font-nunito text-sm text-wolf leading-5">
-        {example}
-      </Text>
-    );
-  }
-
+function buildBoldParts(example: string, term: string) {
   const lowerExample = example.toLowerCase();
   const lowerTerm = term.toLowerCase();
   const parts: { text: string; bold: boolean }[] = [];
@@ -41,8 +33,82 @@ function renderExampleWithBoldTerm(example: string, term: string) {
     currentIndex = foundIndex + term.length;
   }
 
+  return parts;
+}
+
+function buildPatternBoldParts(example: string, term: string) {
+  // Split pattern by "..." to get individual keywords, e.g. "Not only ... But Also ..." → ["not only", "but also"]
+  const keywords = term
+    .split("...")
+    .map((k) => k.trim())
+    .filter((k) => k.length > 0);
+
+  if (keywords.length === 0) {
+    return [{ text: example, bold: false }];
+  }
+
+  // Find all keyword matches with their positions
+  const lowerExample = example.toLowerCase();
+  const matches: { start: number; end: number }[] = [];
+
+  for (const keyword of keywords) {
+    const lowerKeyword = keyword.toLowerCase();
+    let searchFrom = 0;
+    while (searchFrom < example.length) {
+      const foundIndex = lowerExample.indexOf(lowerKeyword, searchFrom);
+      if (foundIndex === -1) break;
+      matches.push({ start: foundIndex, end: foundIndex + keyword.length });
+      searchFrom = foundIndex + keyword.length;
+    }
+  }
+
+  if (matches.length === 0) {
+    return [{ text: example, bold: false }];
+  }
+
+  // Sort by position and merge overlapping ranges
+  matches.sort((a, b) => a.start - b.start);
+
+  const parts: { text: string; bold: boolean }[] = [];
+  let currentIndex = 0;
+
+  for (const match of matches) {
+    if (match.start < currentIndex) continue; // skip overlapping
+    if (match.start > currentIndex) {
+      parts.push({
+        text: example.slice(currentIndex, match.start),
+        bold: false,
+      });
+    }
+    parts.push({ text: example.slice(match.start, match.end), bold: true });
+    currentIndex = match.end;
+  }
+
+  if (currentIndex < example.length) {
+    parts.push({ text: example.slice(currentIndex), bold: false });
+  }
+
+  return parts;
+}
+
+function renderExampleWithBoldTerm(
+  example: string,
+  term: string,
+  category: string,
+) {
+  if (!example || !term) {
+    return (
+      <Text className="text-sm leading-5 font-nunito text-wolf">{example}</Text>
+    );
+  }
+
+  const parts =
+    category === "pattern"
+      ? buildPatternBoldParts(example, term)
+      : buildBoldParts(example, term);
+
   return (
-    <Text className="font-nunito text-sm text-wolf leading-5">
+    <Text className="text-sm leading-5 font-nunito text-wolf">
       {parts.map((part, index) =>
         part.bold ? (
           <Text key={index} className="font-nunito-bold text-eel">
@@ -50,7 +116,7 @@ function renderExampleWithBoldTerm(example: string, term: string) {
           </Text>
         ) : (
           <Text key={index}>{part.text}</Text>
-        )
+        ),
       )}
     </Text>
   );
@@ -68,40 +134,77 @@ export default function CardItem({ card, onEdit, onDelete }: CardItemProps) {
     ]);
   };
 
-  const categoryLabel =
-    card.category === "word"
-      ? "Definition"
-      : card.category === "phrase"
-        ? "Definition"
-        : "Explanation";
+  const borderColorMap = {
+    word: "border-l-feather",
+    phrase: "border-l-macaw",
+    pattern: "border-l-beetle",
+  };
+
+  const shadowColorMap = {
+    word: "shadow-feather",
+    phrase: "shadow-macaw",
+    pattern: "shadow-beetle",
+  };
+
+  const exampleBgMap = {
+    word: "bg-[#f0fde4]",
+    phrase: "bg-[#e8f7fe]",
+    pattern: "bg-[#f5eeff]",
+  };
+
+  const exampleTextMap = {
+    word: "text-feather",
+    phrase: "text-macaw",
+    pattern: "text-beetle",
+  };
 
   return (
-    <View className="bg-white rounded-2xl p-4 mb-3 border border-swan">
+    <View
+      className={`p-5 mb-6 bg-white border border-l-8 shadow ${borderColorMap[card.category]} drop-shadow-xl rounded-2xl border-swan ${shadowColorMap[card.category]}`}
+    >
       <View className="flex-row items-start justify-between mb-2">
-        <Text className="font-nunito-bold text-base text-eel flex-1 mr-2">
+        <Text className="flex-1 mr-6 text-xl font-nunito-extrabold text-eel">
           {card.term}
         </Text>
-        <View className="flex-row items-center gap-2">
-          <TouchableOpacity onPress={() => onEdit(card)} hitSlop={8}>
-            <MaterialCommunityIcons name="pencil" size={18} color="#AFAFAF" />
+        <View className="flex-row items-center gap-3">
+          <TouchableOpacity
+            onPress={() => onEdit(card)}
+            hitSlop={8}
+            className="p-1 rounded-lg bg-bee"
+          >
+            <MaterialCommunityIcons name="pencil" size={18} color="#FFFFFF" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete} hitSlop={8}>
-            <MaterialCommunityIcons name="trash-can" size={18} color="#ff4b4b" />
+          <TouchableOpacity
+            onPress={handleDelete}
+            hitSlop={8}
+            className="p-1 rounded-lg bg-[#ff4b4b]"
+          >
+            <MaterialCommunityIcons
+              name="trash-can"
+              size={18}
+              color="#FFFFFF"
+            />
           </TouchableOpacity>
         </View>
       </View>
-
-      <Text className="font-nunito-semibold text-xs text-hare uppercase tracking-wide mb-1">
-        {categoryLabel}
-      </Text>
-      <Text className="font-nunito text-sm text-eel leading-5 mb-3">
+      <Text className="mt-3 mb-3 text-base leading-5 font-nunito text-eel">
         {card.definition}
       </Text>
 
-      <Text className="font-nunito-semibold text-xs text-hare uppercase tracking-wide mb-1">
-        Example
-      </Text>
-      {renderExampleWithBoldTerm(card.example, card.term)}
+      <View
+        className={`px-2 py-3 mt-2 rounded-lg ${exampleBgMap[card.category]}`}
+      >
+        <Text
+          className={`mb-1 text-sm tracking-wide uppercase font-nunito-bold ${exampleTextMap[card.category]}`}
+        >
+          Example
+        </Text>
+        <Text className="text-sm leading-5 font-nunito text-wolf">
+          {'"'}
+          {renderExampleWithBoldTerm(card.example, card.term, card.category)}
+          {'"'}
+        </Text>
+      </View>
     </View>
   );
 }

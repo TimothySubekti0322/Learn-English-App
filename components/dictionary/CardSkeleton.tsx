@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { View, Animated } from "react-native";
+import { View, Animated, type DimensionValue } from "react-native";
 
-function SkeletonBlock({ width, height }: { width: string; height: number }) {
+function SkeletonBlock({ width, height }: { width: DimensionValue; height: number }) {
   const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -25,8 +25,7 @@ function SkeletonBlock({ width, height }: { width: string; height: number }) {
 
   return (
     <Animated.View
-      style={{ opacity, width, height, borderRadius: 6 }}
-      className="bg-swan"
+      style={{ opacity, width, height, borderRadius: 6, backgroundColor: "#E5E5E5" }}
     />
   );
 }
@@ -37,7 +36,7 @@ export default function CardSkeleton() {
       {[1, 2, 3].map((i) => (
         <View
           key={i}
-          className="bg-white rounded-2xl p-4 mb-3 border border-swan"
+          className="p-4 mb-6 bg-white border rounded-2xl border-swan"
         >
           <SkeletonBlock width="60%" height={18} />
           <View className="mt-3">

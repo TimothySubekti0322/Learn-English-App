@@ -75,6 +75,30 @@ export default function AddEditCardModal({
   const definitionLabel =
     category === "pattern" ? "Explanation" : "Definition";
 
+  const activeBgMap: Record<CardCategory, string> = {
+    word: "bg-feather",
+    phrase: "bg-macaw",
+    pattern: "bg-beetle",
+  };
+
+  const insertBgMap: Record<CardCategory, string> = {
+    word: "bg-feather/10",
+    phrase: "bg-macaw/10",
+    pattern: "bg-beetle/10",
+  };
+
+  const insertTextMap: Record<CardCategory, string> = {
+    word: "text-feather",
+    phrase: "text-macaw",
+    pattern: "text-beetle",
+  };
+
+  const insertIconColorMap: Record<CardCategory, string> = {
+    word: "#58cc02",
+    phrase: "#1cb0f6",
+    pattern: "#ce82ff",
+  };
+
   const handleInsertTerm = () => {
     if (!term.trim()) {
       Alert.alert("No term", `Please enter a ${termLabel.toLowerCase()} first`);
@@ -156,7 +180,7 @@ export default function AddEditCardModal({
                         <TouchableOpacity
                           key={cat.key}
                           onPress={() => setCategory(cat.key)}
-                          className={`flex-1 py-2.5 rounded-lg items-center ${isActive ? "bg-feather" : ""}`}
+                          className={`flex-1 py-2.5 rounded-lg items-center ${isActive ? activeBgMap[cat.key] : ""}`}
                           activeOpacity={0.7}
                         >
                           <Text
@@ -211,15 +235,15 @@ export default function AddEditCardModal({
                   </Text>
                   <TouchableOpacity
                     onPress={handleInsertTerm}
-                    className="flex-row items-center bg-macaw/10 px-3 py-1.5 rounded-lg"
+                    className={`flex-row items-center ${insertBgMap[category]} px-3 py-1.5 rounded-lg`}
                     activeOpacity={0.7}
                   >
                     <MaterialCommunityIcons
                       name="format-bold"
                       size={14}
-                      color="#1cb0f6"
+                      color={insertIconColorMap[category]}
                     />
-                    <Text className="font-nunito-semibold text-xs text-macaw ml-1">
+                    <Text className={`font-nunito-semibold text-xs ${insertTextMap[category]} ml-1`}>
                       Insert {termLabel}
                     </Text>
                   </TouchableOpacity>
@@ -240,7 +264,7 @@ export default function AddEditCardModal({
               <TouchableOpacity
                 onPress={handleSubmit}
                 disabled={submitting}
-                className={`py-4 rounded-xl items-center ${submitting ? "bg-hare" : "bg-feather"}`}
+                className={`py-4 rounded-xl items-center ${submitting ? "bg-hare" : activeBgMap[category]}`}
                 activeOpacity={0.8}
               >
                 <Text className="font-nunito-bold text-base text-white">

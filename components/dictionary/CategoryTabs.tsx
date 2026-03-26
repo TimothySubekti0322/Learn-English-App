@@ -19,14 +19,20 @@ export default function CategoryTabs({
   counts,
 }: CategoryTabsProps) {
   return (
-    <View className="flex-row mx-5 mb-4 bg-polar rounded-xl p-1">
+    <View className="flex-row p-1 mx-5 mt-6 mb-6 bg-snow rounded-xl">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
+        const activeBgMap: Record<CardCategory, string> = {
+          word: "bg-feather",
+          phrase: "bg-macaw",
+          pattern: "bg-beetle",
+        };
+        const activeBg = isActive ? activeBgMap[tab.key] : "";
         return (
           <TouchableOpacity
             key={tab.key}
             onPress={() => onTabChange(tab.key)}
-            className={`flex-1 py-2.5 rounded-lg items-center ${isActive ? "bg-feather" : ""}`}
+            className={`flex-1 py-2.5 rounded-lg items-center ${activeBg}`}
             activeOpacity={0.7}
           >
             <Text

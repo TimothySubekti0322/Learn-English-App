@@ -16,6 +16,12 @@ export default function DictionaryScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCard, setEditingCard] = useState<Card | null>(null);
 
+  const headerBgMap: Record<CardCategory, string> = {
+    word: "bg-feather",
+    phrase: "bg-macaw",
+    pattern: "bg-beetle",
+  };
+
   const loadCards = useCallback(async () => {
     try {
       setLoading(true);
@@ -86,85 +92,108 @@ export default function DictionaryScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-polar" edges={["top"]}>
+    <SafeAreaView
+      className={`flex-1 ${headerBgMap[activeTab]}`}
+      edges={["top"]}
+    >
       {/* Header */}
-      <View className="px-5 pt-4 pb-2">
-        <Text className="font-nunito-extrabold text-2xl text-eel">
-          Hello, Timothy!
-        </Text>
+      <View className={headerBgMap[activeTab]}>
+        <View className="flex-row items-center px-8 pt-4 pb-2">
+          <Text className="text-2xl font-nunito-extrabold text-snow">
+            Hello,
+          </Text>
+          <Text className="ml-2 text-2xl text-[#FFD700] font-nunito-extrabold">
+            Timothy! 👋
+          </Text>
+        </View>
+
+        {/* Stats */}
+        <View className="flex-row gap-4 mx-8 mt-4 mb-8">
+          <View className="items-center flex-1 py-3 bg-white border rounded-xl border-swan">
+            <Text className="text-lg font-nunito-bold text-feather">
+              {counts.word}
+            </Text>
+            <Text className="text-sm font-medium font-nunito text-feather">
+              Words
+            </Text>
+          </View>
+          <View className="items-center flex-1 py-3 bg-white border rounded-xl border-swan">
+            <Text className="text-lg font-nunito-bold text-macaw">
+              {counts.phrase}
+            </Text>
+            <Text className="text-sm font-medium font-nunito text-macaw">
+              Phrases
+            </Text>
+          </View>
+          <View className="items-center flex-1 py-3 bg-white border rounded-xl border-swan">
+            <Text className="text-lg font-nunito-bold text-beetle">
+              {counts.pattern}
+            </Text>
+            <Text className="text-sm font-medium font-nunito text-beetle">
+              Patterns
+            </Text>
+          </View>
+        </View>
       </View>
 
-      {/* Stats */}
-      <View className="flex-row mx-5 mb-4 gap-2">
-        <View className="flex-1 bg-white rounded-xl py-3 items-center border border-swan">
-          <Text className="font-nunito-bold text-lg text-feather">
-            {counts.word}
-          </Text>
-          <Text className="font-nunito text-xs text-wolf">Words</Text>
-        </View>
-        <View className="flex-1 bg-white rounded-xl py-3 items-center border border-swan">
-          <Text className="font-nunito-bold text-lg text-macaw">
-            {counts.phrase}
-          </Text>
-          <Text className="font-nunito text-xs text-wolf">Phrases</Text>
-        </View>
-        <View className="flex-1 bg-white rounded-xl py-3 items-center border border-swan">
-          <Text className="font-nunito-bold text-lg text-beetle">
-            {counts.pattern}
-          </Text>
-          <Text className="font-nunito text-xs text-wolf">Patterns</Text>
-        </View>
-      </View>
-
-      {/* Tabs */}
-      <CategoryTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        counts={counts}
-      />
-
-      {/* Card List */}
-      {loading ? (
-        <CardSkeleton />
-      ) : (
-        <FlatList
-          data={filteredCards}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <CardItem card={item} onEdit={handleEdit} onDelete={handleDelete} />
-          )}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
-          ListEmptyComponent={
-            <View className="items-center justify-center py-16">
-              <Text className="font-nunito-semibold text-base text-hare">
-                No{" "}
-                {activeTab === "word"
-                  ? "words"
-                  : activeTab === "phrase"
-                    ? "phrases"
-                    : "patterns"}{" "}
-                yet
-              </Text>
-              <Text className="font-nunito text-sm text-hare mt-1">
-                Tap + to add your first one
-              </Text>
-            </View>
-          }
-          showsVerticalScrollIndicator={false}
+      <View className="flex-1 px-3 bg-neutral-100">
+        {/* Tabs */}
+        <CategoryTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          counts={counts}
         />
-      )}
 
-      {/* FAB */}
-      <FloatingActionButton onPress={handleAdd} />
+        {/* Card List */}
+        {loading ? (
+          <CardSkeleton />
+        ) : (
+          <FlatList
+            data={filteredCards}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <CardItem
+                card={item}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            )}
+            contentContainerStyle={{
+              paddingHorizontal: 20,
+              paddingBottom: 100,
+            }}
+            ListEmptyComponent={
+              <View className="items-center justify-center py-16">
+                <Text className="text-base font-nunito-semibold text-hare">
+                  No{" "}
+                  {activeTab === "word"
+                    ? "words"
+                    : activeTab === "phrase"
+                      ? "phrases"
+                      : "patterns"}{" "}
+                  yet
+                </Text>
+                <Text className="mt-1 text-sm font-nunito text-hare">
+                  Tap + to add your first one
+                </Text>
+              </View>
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
 
-      {/* Modal */}
-      <AddEditCardModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSubmit={handleSubmit}
-        editCard={editingCard}
-        defaultCategory={activeTab}
-      />
+        {/* FAB */}
+        <FloatingActionButton onPress={handleAdd} category={activeTab} />
+
+        {/* Modal */}
+        <AddEditCardModal
+          visible={modalVisible}
+          onClose={() => setModalVisible(false)}
+          onSubmit={handleSubmit}
+          editCard={editingCard}
+          defaultCategory={activeTab}
+        />
+      </View>
     </SafeAreaView>
   );
 }
