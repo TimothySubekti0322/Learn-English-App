@@ -1,12 +1,38 @@
-import { Card } from "@/lib/types";
+import { useAlert } from "@/components/ui/CustomAlert";
+import { Card, CardCategory } from "@/lib/types";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { memo } from "react";
+import { Text, TouchableOpacity, View } from "react-native";
 
 interface CardItemProps {
   card: Card;
   onEdit: (card: Card) => void;
   onDelete: (id: string) => void;
 }
+
+const borderColorMap: Record<CardCategory, string> = {
+  word: "border-l-feather",
+  phrase: "border-l-macaw",
+  pattern: "border-l-beetle",
+};
+
+const shadowColorMap: Record<CardCategory, string> = {
+  word: "shadow-feather",
+  phrase: "shadow-macaw",
+  pattern: "shadow-beetle",
+};
+
+const exampleBgMap: Record<CardCategory, string> = {
+  word: "bg-[#f0fde4]",
+  phrase: "bg-[#e8f7fe]",
+  pattern: "bg-[#f5eeff]",
+};
+
+const exampleTextMap: Record<CardCategory, string> = {
+  word: "text-feather",
+  phrase: "text-macaw",
+  pattern: "text-beetle",
+};
 
 function buildBoldParts(example: string, term: string) {
   const lowerExample = example.toLowerCase();
@@ -122,40 +148,19 @@ function renderExampleWithBoldTerm(
   );
 }
 
-export default function CardItem({ card, onEdit, onDelete }: CardItemProps) {
+export default memo(function CardItem({ card, onEdit, onDelete }: CardItemProps) {
+  const { showAlert } = useAlert();
+
   const handleDelete = () => {
-    Alert.alert("Delete Card", "Are you sure you want to delete this card?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => onDelete(card.id),
-      },
-    ]);
-  };
-
-  const borderColorMap = {
-    word: "border-l-feather",
-    phrase: "border-l-macaw",
-    pattern: "border-l-beetle",
-  };
-
-  const shadowColorMap = {
-    word: "shadow-feather",
-    phrase: "shadow-macaw",
-    pattern: "shadow-beetle",
-  };
-
-  const exampleBgMap = {
-    word: "bg-[#f0fde4]",
-    phrase: "bg-[#e8f7fe]",
-    pattern: "bg-[#f5eeff]",
-  };
-
-  const exampleTextMap = {
-    word: "text-feather",
-    phrase: "text-macaw",
-    pattern: "text-beetle",
+    showAlert({
+      type: "confirm",
+      title: "Delete Card",
+      message: "Are you sure you want to delete this card?",
+      buttons: [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => onDelete(card.id) },
+      ],
+    });
   };
 
   return (
@@ -207,4 +212,4 @@ export default function CardItem({ card, onEdit, onDelete }: CardItemProps) {
       </View>
     </View>
   );
-}
+})

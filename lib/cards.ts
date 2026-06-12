@@ -1,81 +1,78 @@
-import { supabase } from "./supabase";
+import { randomUUID } from "expo-crypto";
+import {
+  addToSyncQueue,
+  getLocalCards,
+  setLocalCards,
+} from "./localStorage";
 import { Card, CardCategory, CardInsert, CardUpdate } from "./types";
 
-const TABLE_NAME = "cards";
-
 export async function fetchCards(): Promise<Card[]> {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data as Card[];
+  return getLocalCards();
 }
 
 export async function fetchCardsByCategory(
-  category: CardCategory
+  category: CardCategory,
 ): Promise<Card[]> {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select("*")
-    .eq("category", category)
-    .order("created_at", { ascending: false });
-
-  if (error) throw error;
-  return data as Card[];
+  const cards = await getLocalCards();
+  return cards.filter((c) => c.category === category);
 }
 
 export async function fetchCardCounts(): Promise<
   Record<CardCategory, number>
 > {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .select("category");
-
-  if (error) throw error;
-
+  const cards = await getLocalCards();
   const counts: Record<CardCategory, number> = {
     word: 0,
     phrase: 0,
     pattern: 0,
   };
-
-  (data as { category: CardCategory }[]).forEach((row) => {
-    counts[row.category]++;
-  });
-
+  cards.forEach((c) => counts[c.category]++);
   return counts;
 }
 
 export async function addCard(card: CardInsert): Promise<Card> {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .insert(card)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as Card;
+  const now = new Date().toISOString();
+  const newCard: Card = {
+    id: randomUUID(),
+    ...card,
+    created_at: now,
+    updated_at: now,
+  };
+  const cards = await getLocalCards();
+  cards.unshift(newCard);
+  // Independent storage keys (@cards vs @sync_queue) — write them concurrently.
+  await Promise.all([
+    setLocalCards(cards),
+    addToSyncQueue({ type: "UPSERT", card: newCard }),
+  ]);
+  return newCard;
 }
 
 export async function updateCard(
   id: string,
-  updates: CardUpdate
+  updates: CardUpdate,
 ): Promise<Card> {
-  const { data, error } = await supabase
-    .from(TABLE_NAME)
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single();
+  const cards = await getLocalCards();
+  const index = cards.findIndex((c) => c.id === id);
+  if (index === -1) throw new Error("Card not found");
 
-  if (error) throw error;
-  return data as Card;
+  const updated: Card = {
+    ...cards[index],
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+  cards[index] = updated;
+  await Promise.all([
+    setLocalCards(cards),
+    addToSyncQueue({ type: "UPSERT", card: updated }),
+  ]);
+  return updated;
 }
 
 export async function deleteCard(id: string): Promise<void> {
-  const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
-
-  if (error) throw error;
+  const cards = await getLocalCards();
+  await Promise.all([
+    setLocalCards(cards.filter((c) => c.id !== id)),
+    addToSyncQueue({ type: "DELETE", cardId: id }),
+  ]);
 }

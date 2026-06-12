@@ -38,11 +38,20 @@ yarn-error.*
 
 app-example
 
+# claude
+.claude/
+
 # generated native folders
 /ios
 /android
 
 # env files
 .env
+
+# md files
 Project.md
 CLAUDE.md
+
+# misc
+Reference/
+sql/

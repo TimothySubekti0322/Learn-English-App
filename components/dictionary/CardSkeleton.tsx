@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { View, Animated, type DimensionValue } from "react-native";
 
 function SkeletonBlock({ width, height }: { width: DimensionValue; height: number }) {
-  const opacity = useRef(new Animated.Value(0.3)).current;
+  const opacity = useMemo(() => new Animated.Value(0.3), []);
 
   useEffect(() => {
     const animation = Animated.loop(

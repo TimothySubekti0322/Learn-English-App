@@ -13,6 +13,12 @@ const tabs: { key: CardCategory; label: string }[] = [
   { key: "pattern", label: "Pattern" },
 ];
 
+const activeBgMap: Record<CardCategory, string> = {
+  word: "bg-feather",
+  phrase: "bg-macaw",
+  pattern: "bg-beetle",
+};
+
 export default function CategoryTabs({
   activeTab,
   onTabChange,
@@ -22,11 +28,6 @@ export default function CategoryTabs({
     <View className="flex-row p-1 mx-5 mt-6 mb-6 bg-snow rounded-xl">
       {tabs.map((tab) => {
         const isActive = activeTab === tab.key;
-        const activeBgMap: Record<CardCategory, string> = {
-          word: "bg-feather",
-          phrase: "bg-macaw",
-          pattern: "bg-beetle",
-        };
         const activeBg = isActive ? activeBgMap[tab.key] : "";
         return (
           <TouchableOpacity

@@ -1,4 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useAlert } from "@/components/ui/CustomAlert";
+import { Card, CardCategory } from "@/lib/types";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -8,10 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from "react-native";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import { Card, CardCategory } from "@/lib/types";
 
 interface AddEditCardModalProps {
   visible: boolean;
@@ -32,6 +32,30 @@ const categories: { key: CardCategory; label: string }[] = [
   { key: "pattern", label: "Pattern" },
 ];
 
+const activeBgMap: Record<CardCategory, string> = {
+  word: "bg-feather",
+  phrase: "bg-macaw",
+  pattern: "bg-beetle",
+};
+
+const insertBgMap: Record<CardCategory, string> = {
+  word: "bg-feather/10",
+  phrase: "bg-macaw/10",
+  pattern: "bg-beetle/10",
+};
+
+const insertTextMap: Record<CardCategory, string> = {
+  word: "text-feather",
+  phrase: "text-macaw",
+  pattern: "text-beetle",
+};
+
+const insertIconColorMap: Record<CardCategory, string> = {
+  word: "#58cc02",
+  phrase: "#1cb0f6",
+  pattern: "#ce82ff",
+};
+
 export default function AddEditCardModal({
   visible,
   onClose,
@@ -39,31 +63,15 @@ export default function AddEditCardModal({
   editCard,
   defaultCategory,
 }: AddEditCardModalProps) {
-  const [category, setCategory] = useState<CardCategory>(defaultCategory);
-  const [term, setTerm] = useState("");
-  const [definition, setDefinition] = useState("");
-  const [example, setExample] = useState("");
+  const { showAlert } = useAlert();
+  const [category, setCategory] = useState<CardCategory>(editCard?.category ?? defaultCategory);
+  const [term, setTerm] = useState(editCard?.term ?? "");
+  const [definition, setDefinition] = useState(editCard?.definition ?? "");
+  const [example, setExample] = useState(editCard?.example ?? "");
   const [submitting, setSubmitting] = useState(false);
   const exampleInputRef = useRef<TextInput>(null);
 
   const isEditing = !!editCard;
-
-  useEffect(() => {
-    if (visible) {
-      if (editCard) {
-        setCategory(editCard.category);
-        setTerm(editCard.term);
-        setDefinition(editCard.definition);
-        setExample(editCard.example);
-      } else {
-        setCategory(defaultCategory);
-        setTerm("");
-        setDefinition("");
-        setExample("");
-      }
-      setSubmitting(false);
-    }
-  }, [visible, editCard, defaultCategory]);
 
   const termLabel =
     category === "word"
@@ -75,33 +83,9 @@ export default function AddEditCardModal({
   const definitionLabel =
     category === "pattern" ? "Explanation" : "Definition";
 
-  const activeBgMap: Record<CardCategory, string> = {
-    word: "bg-feather",
-    phrase: "bg-macaw",
-    pattern: "bg-beetle",
-  };
-
-  const insertBgMap: Record<CardCategory, string> = {
-    word: "bg-feather/10",
-    phrase: "bg-macaw/10",
-    pattern: "bg-beetle/10",
-  };
-
-  const insertTextMap: Record<CardCategory, string> = {
-    word: "text-feather",
-    phrase: "text-macaw",
-    pattern: "text-beetle",
-  };
-
-  const insertIconColorMap: Record<CardCategory, string> = {
-    word: "#58cc02",
-    phrase: "#1cb0f6",
-    pattern: "#ce82ff",
-  };
-
   const handleInsertTerm = () => {
     if (!term.trim()) {
-      Alert.alert("No term", `Please enter a ${termLabel.toLowerCase()} first`);
+      showAlert({ type: "info", title: "No term", message: `Please enter a ${termLabel.toLowerCase()} first` });
       return;
     }
     setExample((prev) => {
@@ -114,15 +98,15 @@ export default function AddEditCardModal({
 
   const handleSubmit = async () => {
     if (!term.trim()) {
-      Alert.alert("Required", `Please enter a ${termLabel.toLowerCase()}`);
+      showAlert({ type: "info", title: "Required", message: `Please enter a ${termLabel.toLowerCase()}` });
       return;
     }
     if (!definition.trim()) {
-      Alert.alert("Required", `Please enter a ${definitionLabel.toLowerCase()}`);
+      showAlert({ type: "info", title: "Required", message: `Please enter a ${definitionLabel.toLowerCase()}` });
       return;
     }
     if (!example.trim()) {
-      Alert.alert("Required", "Please enter an example");
+      showAlert({ type: "info", title: "Required", message: "Please enter an example" });
       return;
     }
 
